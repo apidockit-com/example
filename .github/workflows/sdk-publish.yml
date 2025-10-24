@@ -1,0 +1,60 @@
+name: Generate & Publish SDK
+
+on:
+  workflow_dispatch: {}   # you can run manually from GitHub
+  push:
+    branches: [ "main" ]  # later we can add dev / PR rules
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish-sdk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@api-doc-kit"
+
+      - name: Install npm dependencies for documentation
+        working-directory: tools/documentation
+        run: npm ci
+
+      - name: Generate OpenAPI YAML and SDK
+        working-directory: tools/documentation
+        run: npm run generate
+
+      - name: Install SDK dependencies
+        working-directory: openapi/sdk
+        run: npm ci
+
+      - name: Build SDK
+        working-directory: openapi/sdk
+        run: npm run build
+
+      - name: Set SDK version (temporary manual)
+        working-directory: openapi/sdk
+        run: node -e "const fs=require('fs');let p=JSON.parse(fs.readFileSync('package.json'));p.version='0.0.1';fs.writeFileSync('package.json',JSON.stringify(p,null,2));console.log('Version set to',p.version);"
+
+      - name: Publish SDK to GitHub Packages
+        working-directory: openapi/sdk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish --tag latest
