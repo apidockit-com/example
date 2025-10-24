@@ -1,0 +1,11 @@
+{
+    "typescriptThreePlus": false,
+    "useSingleRequestParameter": true,
+    "additionalProperties": {
+      "stringEnums": true
+    },
+    "typeMappings": {
+      "string+date": "string",
+      "string+time": "Time"
+    }
+  }
