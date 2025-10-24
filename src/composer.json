@@ -10,17 +10,11 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "ismayil-dev/api-doc-kit": "@dev",
+        "ismayil-dev/api-doc-kit": "dev-main",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1"
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "/Users/ismayil/dev/www/api-doc-kit"
-        }
-    ],
     "require-dev": {
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.2.2",

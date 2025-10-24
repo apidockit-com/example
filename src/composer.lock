@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a195aada5791b4d8793dfcaa022bf77a",
+    "content-hash": "c03defe97aa8da6037b4ea6117e1d51a",
     "packages": [
         {
             "name": "brick/math",
@@ -1056,10 +1056,16 @@
         {
             "name": "ismayil-dev/api-doc-kit",
             "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ismayil-dev/api-doc-kit.git",
+                "reference": "795745a962277bd86cd1848eec8e3429761b9c29"
+            },
             "dist": {
-                "type": "path",
-                "url": "/Users/ismayil/dev/www/api-doc-kit",
-                "reference": "ddfca5518d457289e91f8a40a76809d72369a9a3"
+                "type": "zip",
+                "url": "https://api.github.com/repos/ismayil-dev/api-doc-kit/zipball/795745a962277bd86cd1848eec8e3429761b9c29",
+                "reference": "795745a962277bd86cd1848eec8e3429761b9c29",
+                "shasum": ""
             },
             "require": {
                 "laravel/framework": "^10.0|^11.0|^12.0",
@@ -1071,6 +1077,7 @@
                 "nikic/php-parser": "^5.4",
                 "pestphp/pest": "^3.7"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -1084,23 +1091,7 @@
                     "IsmayilDev\\ApiDocKit\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "IsmayilDev\\ApiDocKit\\Tests\\": "tests/",
-                    "IsmayilDev\\ApiDocKit\\Tests\\Doubles\\Models\\": "tests/doubles/Models/",
-                    "IsmayilDev\\ApiDocKit\\Tests\\Doubles\\DataClasses\\": "tests/doubles/DataClasses/",
-                    "IsmayilDev\\ApiDocKit\\Tests\\Doubles\\Enums\\": "tests/doubles/Enums/",
-                    "IsmayilDev\\ApiDocKit\\Tests\\Doubles\\ValueObjects\\": "tests/doubles/ValueObjects/"
-                }
-            },
-            "scripts": {
-                "lint": [
-                    "vendor/bin/pint"
-                ],
-                "test": [
-                    "vendor/bin/pest"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1127,9 +1118,7 @@
                 "issues": "https://github.com/ismayil-dev/api-doc-kit/issues",
                 "source": "https://github.com/ismayil-dev/api-doc-kit"
             },
-            "transport-options": {
-                "relative": false
-            }
+            "time": "2025-10-24T21:06:37+00:00"
         },
         {
             "name": "laravel/framework",
