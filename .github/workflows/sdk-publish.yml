@@ -26,6 +26,9 @@ jobs:
       - name: Install Composer dependencies
         run: cd src && composer install --no-interaction --prefer-dist --no-progress
 
+      - name: Run migrations
+        run: cd src && php artisan migrate --seed
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
