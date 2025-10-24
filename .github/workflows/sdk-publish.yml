@@ -26,6 +26,9 @@ jobs:
       - name: Install Composer dependencies
         run: cd src && composer install --no-interaction --prefer-dist --no-progress
 
+      - name: Create sqlite database
+        run: cd src && touch database/database.sqlite
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
