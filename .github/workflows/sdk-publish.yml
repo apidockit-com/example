@@ -46,7 +46,7 @@ jobs:
 
       - name: Install SDK dependencies
         working-directory: openapi/sdk
-        run: npm ci
+        run: npm install
 
       - name: Build SDK
         working-directory: openapi/sdk
