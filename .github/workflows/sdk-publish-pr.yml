@@ -84,7 +84,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `## SDK Published ✅\n\n**Version:** \`${{ env.NEW_SDK_VERSION }}\`\n**Tag:** \`next\`\n\n**Install command:**\n\`\`\`bash\nnpm install @api-doc-kit/sdk@${{ env.NEW_SDK_VERSION }}\n\`\`\``
+              body: `## SDK Published ✅\n\n**Version:** \`${{ env.NEW_SDK_VERSION }}\`\n**Tag:** \`next\`\n\n**Install command:**\n\`\`\`bash\nnpm install  @apidockit-com/sdk@${{ env.NEW_SDK_VERSION }}\n\`\`\``
             })
 
       - name: Summary
