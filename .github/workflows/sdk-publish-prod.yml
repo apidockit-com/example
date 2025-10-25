@@ -38,8 +38,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@apidockit-com"
 
       - name: Install npm dependencies for documentation
         working-directory: tools/documentation
@@ -71,10 +69,27 @@ jobs:
         working-directory: openapi/sdk
         run: npm run build
 
+      - name: Debug - Verify token exists
+        run: |
+          if [ -z "${{ secrets.PACKAGES_TOKEN }}" ]; then
+            echo "❌ ERROR: PACKAGES_TOKEN secret is not set!"
+            exit 1
+          else
+            echo "✅ PACKAGES_TOKEN is set"
+            echo "Token length: ${#PACKAGES_TOKEN}"
+          fi
+        env:
+          PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+
+      - name: Configure npm authentication
+        working-directory: openapi/sdk
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.PACKAGES_TOKEN }}" >> .npmrc
+          echo "✅ Authentication configured"
+          cat .npmrc
+
       - name: Publish SDK to GitHub Packages
         working-directory: openapi/sdk
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
         run: npm publish --tag latest
 
       - name: Summary
