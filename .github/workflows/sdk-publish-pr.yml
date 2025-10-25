@@ -96,5 +96,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Install command:**" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "npm install @api-doc-kit/sdk@${{ env.NEW_SDK_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "npm install @apidockit-com/sdk@${{ env.NEW_SDK_VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
