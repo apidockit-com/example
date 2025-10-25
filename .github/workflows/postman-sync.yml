@@ -1,0 +1,219 @@
+name: Sync API to Postman
+
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # Generate OpenAPI documentation from Laravel
+  generate-docs:
+    name: Generate OpenAPI documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: cd src && composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Create sqlite database
+        run: cd src && touch database/database.sqlite
+
+      - name: Generate OpenAPI documentation
+        run: cd src && php artisan doc:generate
+
+      - name: Upload OpenAPI file as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: src/storage/app/private/documentation/openapi.yaml
+          retention-days: 1
+
+  # Sync to Postman (Production - main branch)
+  sync-production:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    name: Sync to Postman (Production)
+    runs-on: ubuntu-latest
+    needs: generate-docs
+    steps:
+      - name: Download OpenAPI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-spec
+
+      - name: Sync to Postman
+        run: |
+          curl --request PUT \
+            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/main" \
+            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+            --header "Content-Type: application/json" \
+            --data '{
+              "version": {
+                "name": "main",
+                "schema": {
+                  "type": "openapi3",
+                  "language": "yaml"
+                }
+              }
+            }' || echo "Version might already exist, will update schema"
+
+      - name: Update Postman schema
+        run: |
+          SCHEMA_ID=$(curl --request GET \
+            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/main" \
+            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" | jq -r '.version.schemas[0].id')
+
+          curl --request PUT \
+            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/main/schemas/${SCHEMA_ID}" \
+            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+            --header "Content-Type: application/json" \
+            --data "{
+              \"schema\": {
+                \"type\": \"openapi3\",
+                \"language\": \"yaml\",
+                \"schema\": $(cat openapi.yaml | jq -Rs .)
+              }
+            }"
+
+  # Sync to Postman (Development - dev branch)
+  sync-dev:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+    name: Sync to Postman (Dev)
+    runs-on: ubuntu-latest
+    needs: generate-docs
+    steps:
+      - name: Download OpenAPI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-spec
+
+      - name: Sync to Postman
+        run: |
+          curl --request PUT \
+            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/dev" \
+            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+            --header "Content-Type: application/json" \
+            --data '{
+              "version": {
+                "name": "dev",
+                "schema": {
+                  "type": "openapi3",
+                  "language": "yaml"
+                }
+              }
+            }' || echo "Version might already exist, will update schema"
+
+      - name: Update Postman schema
+        run: |
+          SCHEMA_ID=$(curl --request GET \
+            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/dev" \
+            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" | jq -r '.version.schemas[0].id')
+
+          curl --request PUT \
+            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/dev/schemas/${SCHEMA_ID}" \
+            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+            --header "Content-Type: application/json" \
+            --data "{
+              \"schema\": {
+                \"type\": \"openapi3\",
+                \"language\": \"yaml\",
+                \"schema\": $(cat openapi.yaml | jq -Rs .)
+              }
+            }"
+
+  # Sync to Postman (Pull Request)
+  sync-pr:
+    if: ${{ github.event_name == 'pull_request' }}
+    name: Sync to Postman (PR)
+    runs-on: ubuntu-latest
+    needs: generate-docs
+    steps:
+      - name: Download OpenAPI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-spec
+
+      - name: Create PR version in Postman
+        id: postman-sync
+        run: |
+          PR_VERSION="pr-${{ github.event.pull_request.number }}"
+
+          curl --request PUT \
+            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/${PR_VERSION}" \
+            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+            --header "Content-Type: application/json" \
+            --data "{
+              \"version\": {
+                \"name\": \"${PR_VERSION}\",
+                \"schema\": {
+                  \"type\": \"openapi3\",
+                  \"language\": \"yaml\"
+                }
+              }
+            }" || echo "Version might already exist, will update schema"
+
+          echo "version=${PR_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Update Postman schema
+        run: |
+          PR_VERSION="pr-${{ github.event.pull_request.number }}"
+          SCHEMA_ID=$(curl --request GET \
+            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/${PR_VERSION}" \
+            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" | jq -r '.version.schemas[0].id')
+
+          curl --request PUT \
+            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/${PR_VERSION}/schemas/${SCHEMA_ID}" \
+            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+            --header "Content-Type: application/json" \
+            --data "{
+              \"schema\": {
+                \"type\": \"openapi3\",
+                \"language\": \"yaml\",
+                \"schema\": $(cat openapi.yaml | jq -Rs .)
+              }
+            }"
+
+      - name: Find existing Postman comment
+        uses: peter-evans/find-comment@v3
+        id: find-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '<!-- POSTMAN_SYNC_COMMENT -->'
+
+      - name: Comment PR with Postman link
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          body: |
+            <!-- POSTMAN_SYNC_COMMENT -->
+            ## 📮 Postman Collection Updated
+
+            **Version:** `${{ steps.postman-sync.outputs.version }}`
+
+            This PR's API has been synced to Postman. You can:
+            - View and test the API in Postman workspace
+            - Import the collection to test endpoints
+            - See the OpenAPI schema updates
+
+            > **Note:** The version `${{ steps.postman-sync.outputs.version }}` will be automatically deleted when this PR is closed.
+
+            ---
+
+            *🤖 This comment updates automatically on every push*
