@@ -48,83 +48,35 @@ jobs:
         working-directory: tools/documentation
         run: npm run generate
 
-      - name: Pull Old Version (for comparison)
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p build/old-sdk
-          cd build/old-sdk
-          npm init -y
-          npm install @api-doc-kit/sdk@dev --save-exact || echo "No previous dev version found"
-
-      - name: Initialize Git and Commit Old Version
-        run: |
-          cd build/old-sdk
-          git init
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add .
-          git commit -m "Initial commit with old SDK version" || echo "No old version to commit"
-
-      - name: Copy New Files
-        run: |
-          if [ -d "build/old-sdk/node_modules/@api-doc-kit/sdk" ]; then
-            cp -r openapi/sdk/* build/old-sdk/node_modules/@api-doc-kit/sdk/
-          else
-            mkdir -p build/old-sdk/node_modules/@api-doc-kit/sdk
-            cp -r openapi/sdk/* build/old-sdk/node_modules/@api-doc-kit/sdk/
-          fi
-
       - name: Generate new SDK version number
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd build/old-sdk
-          echo "NEW_SDK_VERSION=$(node ../../tools/documentation/semantic-version-dev.mjs)" >> $GITHUB_ENV
+          echo "NEW_SDK_VERSION=$(node tools/documentation/semantic-version-dev.mjs)" >> $GITHUB_ENV
 
       - name: Print new SDK version
         run: |
           echo "Next SDK version: ${{ env.NEW_SDK_VERSION }}"
 
-      - name: Check for Changes
-        id: check_changes
-        run: |
-          cd build/old-sdk
-          git add -A
-          CHANGED_FILES=$(git diff --staged --name-only)
-          echo "Changed files are $CHANGED_FILES"
-          echo "changed_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
-          if [[ "$CHANGED_FILES" == "node_modules/@api-doc-kit/sdk/package.json" || -z "$CHANGED_FILES" ]]; then
-            echo "No significant changes to publish"
-            echo "skip_publish=true" >> $GITHUB_OUTPUT
-          else
-            echo "skip_publish=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Install SDK dependencies
-        if: steps.check_changes.outputs.skip_publish != 'true'
         working-directory: openapi/sdk
         run: npm install
 
       - name: Set NPM Package Version
-        if: steps.check_changes.outputs.skip_publish != 'true'
         working-directory: openapi/sdk
         run: npm version "${{ env.NEW_SDK_VERSION }}" --allow-same-version --no-git-tag-version
 
       - name: Build SDK
-        if: steps.check_changes.outputs.skip_publish != 'true'
         working-directory: openapi/sdk
         run: npm run build
 
       - name: Publish SDK to GitHub Packages
-        if: steps.check_changes.outputs.skip_publish != 'true'
         working-directory: openapi/sdk
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm publish --tag dev
 
       - name: Summary
-        if: steps.check_changes.outputs.skip_publish != 'true'
         run: |
           echo "## SDK Published Successfully ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -135,10 +87,3 @@ jobs:
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
           echo "npm install @api-doc-kit/sdk@dev" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-
-      - name: Summary (No Changes)
-        if: steps.check_changes.outputs.skip_publish == 'true'
-        run: |
-          echo "## No SDK Changes ⏭️" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "No significant changes detected. Skipping publish." >> $GITHUB_STEP_SUMMARY
