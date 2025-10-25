@@ -78,11 +78,9 @@ jobs:
               --silent \
               --write-out "\nHTTP_STATUS:%{http_code}" \
               --data "{
-                \"schema\": {
-                  \"type\": \"openapi3\",
-                  \"language\": \"yaml\",
-                  \"schema\": $(cat openapi.yaml | jq -Rs .)
-                }
+                \"type\": \"openapi3\",
+                \"language\": \"yaml\",
+                \"schema\": $(cat openapi.yaml | jq -Rs .)
               }")
 
             HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
@@ -103,11 +101,9 @@ jobs:
               --silent \
               --write-out "\nHTTP_STATUS:%{http_code}" \
               --data "{
-                \"schema\": {
-                  \"type\": \"openapi3\",
-                  \"language\": \"yaml\",
-                  \"schema\": $(cat openapi.yaml | jq -Rs .)
-                }
+                \"type\": \"openapi3\",
+                \"language\": \"yaml\",
+                \"schema\": $(cat openapi.yaml | jq -Rs .)
               }")
 
             HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
@@ -156,11 +152,9 @@ jobs:
               --silent \
               --write-out "\nHTTP_STATUS:%{http_code}" \
               --data "{
-                \"schema\": {
-                  \"type\": \"openapi3\",
-                  \"language\": \"yaml\",
-                  \"schema\": $(cat openapi.yaml | jq -Rs .)
-                }
+                \"type\": \"openapi3\",
+                \"language\": \"yaml\",
+                \"schema\": $(cat openapi.yaml | jq -Rs .)
               }")
 
             HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
@@ -181,11 +175,9 @@ jobs:
               --silent \
               --write-out "\nHTTP_STATUS:%{http_code}" \
               --data "{
-                \"schema\": {
-                  \"type\": \"openapi3\",
-                  \"language\": \"yaml\",
-                  \"schema\": $(cat openapi.yaml | jq -Rs .)
-                }
+                \"type\": \"openapi3\",
+                \"language\": \"yaml\",
+                \"schema\": $(cat openapi.yaml | jq -Rs .)
               }")
 
             HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
@@ -278,11 +270,9 @@ jobs:
               --silent \
               --write-out "\nHTTP_STATUS:%{http_code}" \
               --data "{
-                \"schema\": {
-                  \"type\": \"openapi3\",
-                  \"language\": \"yaml\",
-                  \"schema\": $(cat openapi.yaml | jq -Rs .)
-                }
+                \"type\": \"openapi3\",
+                \"language\": \"yaml\",
+                \"schema\": $(cat openapi.yaml | jq -Rs .)
               }")
 
             HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
@@ -302,11 +292,9 @@ jobs:
               --silent \
               --write-out "\nHTTP_STATUS:%{http_code}" \
               --data "{
-                \"schema\": {
-                  \"type\": \"openapi3\",
-                  \"language\": \"yaml\",
-                  \"schema\": $(cat openapi.yaml | jq -Rs .)
-                }
+                \"type\": \"openapi3\",
+                \"language\": \"yaml\",
+                \"schema\": $(cat openapi.yaml | jq -Rs .)
               }")
 
             HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
