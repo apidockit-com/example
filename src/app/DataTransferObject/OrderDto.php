@@ -17,7 +17,7 @@ readonly class OrderDto implements Arrayable
 {
     public function __construct(
         public int $id,
-//        public int $userId,
+        public int $userId,
         public string $description,
         public OrderStatus $status,
         public OrderPaymentStatus $paymentStatus,
@@ -35,7 +35,7 @@ readonly class OrderDto implements Arrayable
     {
         return new self(
             id: $order->id,
-//            userId: $order->user_id,
+            userId: $order->user_id,
             description: $order->description,
             status: $order->status,
             paymentStatus: $order->payment_status,
@@ -51,7 +51,7 @@ readonly class OrderDto implements Arrayable
     {
         return [
             'id' => $this->id,
-//            'userId' => $this->userId,
+            'userId' => $this->userId,
             'description' => $this->description,
             'status' => $this->status,
             'paymentStatus' => $this->paymentStatus->value,
