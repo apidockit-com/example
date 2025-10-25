@@ -1,4 +1,4 @@
-name: Clean up Postman PR Versions
+name: Clean up Postman PR APIs
 
 permissions:
   contents: read
@@ -9,18 +9,35 @@ on:
 
 jobs:
   cleanup-postman:
-    name: Delete Postman PR version
+    name: Delete Postman PR API
     runs-on: ubuntu-latest
     steps:
-      - name: Delete PR version from Postman
+      - name: Delete PR API from Postman
         run: |
-          PR_VERSION="pr-${{ github.event.pull_request.number }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_API_NAME="Laravel API - PR #${PR_NUMBER}"
 
-          echo "🗑️  Deleting Postman version: ${PR_VERSION}"
+          echo "🗑️  Looking for Postman API: ${PR_API_NAME}"
+
+          # Find the API by name
+          ALL_APIS=$(curl --request GET \
+            --url "https://api.getpostman.com/apis" \
+            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+            --silent)
+
+          PR_API_ID=$(echo "$ALL_APIS" | jq -r ".apis[] | select(.name == \"${PR_API_NAME}\") | .id // empty" | head -1)
+
+          if [ -z "$PR_API_ID" ]; then
+            echo "⚠️  API not found (might have been already deleted or never created)"
+            exit 0
+          fi
+
+          echo "Found API ID: $PR_API_ID"
+          echo "🗑️  Deleting Postman API..."
 
           curl --request DELETE \
-            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/${PR_VERSION}" \
+            --url "https://api.getpostman.com/apis/${PR_API_ID}" \
             --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
-            --fail-with-body || echo "⚠️  Version might not exist or already deleted"
+            --fail-with-body || echo "⚠️  API might not exist or already deleted"
 
           echo "✅ Cleanup complete"

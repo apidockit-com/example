@@ -55,39 +55,48 @@ jobs:
         with:
           name: openapi-spec
 
-      - name: Sync to Postman
+      - name: Update Postman API schema
         run: |
-          curl --request PUT \
-            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/main" \
+          # For v10 APIs, we update the schema file directly
+          # Get the list of schema files for this API
+          SCHEMAS=$(curl --request GET \
+            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID_MAIN }}" \
             --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
-            --header "Content-Type: application/json" \
-            --data '{
-              "version": {
-                "name": "main",
-                "schema": {
-                  "type": "openapi3",
-                  "language": "yaml"
+            --silent)
+
+          SCHEMA_ID=$(echo "$SCHEMAS" | jq -r '.api.schemas[0].id // empty')
+
+          if [ -z "$SCHEMA_ID" ]; then
+            echo "No schema found, creating new schema..."
+            # Create new schema
+            curl --request POST \
+              --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID_MAIN }}/schemas" \
+              --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+              --header "Content-Type: application/json" \
+              --data "{
+                \"schema\": {
+                  \"type\": \"openapi3\",
+                  \"language\": \"yaml\",
+                  \"schema\": $(cat openapi.yaml | jq -Rs .)
                 }
-              }
-            }' || echo "Version might already exist, will update schema"
+              }"
+          else
+            echo "Updating existing schema: $SCHEMA_ID"
+            # Update existing schema
+            curl --request PUT \
+              --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID_MAIN }}/schemas/$SCHEMA_ID" \
+              --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+              --header "Content-Type: application/json" \
+              --data "{
+                \"schema\": {
+                  \"type\": \"openapi3\",
+                  \"language\": \"yaml\",
+                  \"schema\": $(cat openapi.yaml | jq -Rs .)
+                }
+              }"
+          fi
 
-      - name: Update Postman schema
-        run: |
-          SCHEMA_ID=$(curl --request GET \
-            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/main" \
-            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" | jq -r '.version.schemas[0].id')
-
-          curl --request PUT \
-            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/main/schemas/${SCHEMA_ID}" \
-            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
-            --header "Content-Type: application/json" \
-            --data "{
-              \"schema\": {
-                \"type\": \"openapi3\",
-                \"language\": \"yaml\",
-                \"schema\": $(cat openapi.yaml | jq -Rs .)
-              }
-            }"
+          echo "✅ Production API updated successfully"
 
   # Sync to Postman (Development - dev branch)
   sync-dev:
@@ -101,39 +110,48 @@ jobs:
         with:
           name: openapi-spec
 
-      - name: Sync to Postman
+      - name: Update Postman API schema
         run: |
-          curl --request PUT \
-            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/dev" \
+          # For v10 APIs, we update the schema file directly
+          # Get the list of schema files for this API
+          SCHEMAS=$(curl --request GET \
+            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID_DEV }}" \
             --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
-            --header "Content-Type: application/json" \
-            --data '{
-              "version": {
-                "name": "dev",
-                "schema": {
-                  "type": "openapi3",
-                  "language": "yaml"
+            --silent)
+
+          SCHEMA_ID=$(echo "$SCHEMAS" | jq -r '.api.schemas[0].id // empty')
+
+          if [ -z "$SCHEMA_ID" ]; then
+            echo "No schema found, creating new schema..."
+            # Create new schema
+            curl --request POST \
+              --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID_DEV }}/schemas" \
+              --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+              --header "Content-Type: application/json" \
+              --data "{
+                \"schema\": {
+                  \"type\": \"openapi3\",
+                  \"language\": \"yaml\",
+                  \"schema\": $(cat openapi.yaml | jq -Rs .)
                 }
-              }
-            }' || echo "Version might already exist, will update schema"
+              }"
+          else
+            echo "Updating existing schema: $SCHEMA_ID"
+            # Update existing schema
+            curl --request PUT \
+              --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID_DEV }}/schemas/$SCHEMA_ID" \
+              --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+              --header "Content-Type: application/json" \
+              --data "{
+                \"schema\": {
+                  \"type\": \"openapi3\",
+                  \"language\": \"yaml\",
+                  \"schema\": $(cat openapi.yaml | jq -Rs .)
+                }
+              }"
+          fi
 
-      - name: Update Postman schema
-        run: |
-          SCHEMA_ID=$(curl --request GET \
-            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/dev" \
-            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" | jq -r '.version.schemas[0].id')
-
-          curl --request PUT \
-            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/dev/schemas/${SCHEMA_ID}" \
-            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
-            --header "Content-Type: application/json" \
-            --data "{
-              \"schema\": {
-                \"type\": \"openapi3\",
-                \"language\": \"yaml\",
-                \"schema\": $(cat openapi.yaml | jq -Rs .)
-              }
-            }"
+          echo "✅ Development API updated successfully"
 
   # Sync to Postman (Pull Request)
   sync-pr:
@@ -147,45 +165,91 @@ jobs:
         with:
           name: openapi-spec
 
-      - name: Create PR version in Postman
+      - name: Create or update PR API in Postman
         id: postman-sync
         run: |
-          PR_VERSION="pr-${{ github.event.pull_request.number }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_API_NAME="Laravel API - PR #${PR_NUMBER}"
 
-          curl --request PUT \
-            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/${PR_VERSION}" \
+          # Check if API already exists for this PR
+          # We'll store the API ID in the PR comment and retrieve it
+          # For now, try to create a new API
+
+          echo "Creating Postman API for PR #${PR_NUMBER}..."
+
+          CREATE_RESPONSE=$(curl --request POST \
+            --url "https://api.getpostman.com/apis" \
             --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
             --header "Content-Type: application/json" \
+            --silent \
             --data "{
-              \"version\": {
-                \"name\": \"${PR_VERSION}\",
+              \"api\": {
+                \"name\": \"${PR_API_NAME}\",
+                \"summary\": \"Pull Request #${PR_NUMBER} - Auto-generated OpenAPI documentation\"
+              }
+            }")
+
+          PR_API_ID=$(echo "$CREATE_RESPONSE" | jq -r '.api.id // empty')
+
+          # If creation failed, it might already exist - we need to find it
+          if [ -z "$PR_API_ID" ]; then
+            echo "API creation returned empty ID, checking if it already exists..."
+            # List all APIs and find the one matching our PR
+            ALL_APIS=$(curl --request GET \
+              --url "https://api.getpostman.com/apis" \
+              --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+              --silent)
+
+            PR_API_ID=$(echo "$ALL_APIS" | jq -r ".apis[] | select(.name == \"${PR_API_NAME}\") | .id // empty" | head -1)
+          fi
+
+          if [ -z "$PR_API_ID" ]; then
+            echo "❌ Failed to create or find PR API"
+            echo "Response: $CREATE_RESPONSE"
+            exit 1
+          fi
+
+          echo "✅ Using API ID: $PR_API_ID"
+          echo "api_id=${PR_API_ID}" >> $GITHUB_OUTPUT
+          echo "api_name=${PR_API_NAME}" >> $GITHUB_OUTPUT
+
+          # Now create or update the schema
+          SCHEMAS=$(curl --request GET \
+            --url "https://api.getpostman.com/apis/${PR_API_ID}" \
+            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+            --silent)
+
+          SCHEMA_ID=$(echo "$SCHEMAS" | jq -r '.api.schemas[0].id // empty')
+
+          if [ -z "$SCHEMA_ID" ]; then
+            echo "Creating new schema..."
+            curl --request POST \
+              --url "https://api.getpostman.com/apis/${PR_API_ID}/schemas" \
+              --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+              --header "Content-Type: application/json" \
+              --data "{
                 \"schema\": {
                   \"type\": \"openapi3\",
-                  \"language\": \"yaml\"
+                  \"language\": \"yaml\",
+                  \"schema\": $(cat openapi.yaml | jq -Rs .)
                 }
-              }
-            }" || echo "Version might already exist, will update schema"
+              }"
+          else
+            echo "Updating existing schema: $SCHEMA_ID"
+            curl --request PUT \
+              --url "https://api.getpostman.com/apis/${PR_API_ID}/schemas/$SCHEMA_ID" \
+              --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+              --header "Content-Type: application/json" \
+              --data "{
+                \"schema\": {
+                  \"type\": \"openapi3\",
+                  \"language\": \"yaml\",
+                  \"schema\": $(cat openapi.yaml | jq -Rs .)
+                }
+              }"
+          fi
 
-          echo "version=${PR_VERSION}" >> $GITHUB_OUTPUT
-
-      - name: Update Postman schema
-        run: |
-          PR_VERSION="pr-${{ github.event.pull_request.number }}"
-          SCHEMA_ID=$(curl --request GET \
-            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/${PR_VERSION}" \
-            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" | jq -r '.version.schemas[0].id')
-
-          curl --request PUT \
-            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/${PR_VERSION}/schemas/${SCHEMA_ID}" \
-            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
-            --header "Content-Type: application/json" \
-            --data "{
-              \"schema\": {
-                \"type\": \"openapi3\",
-                \"language\": \"yaml\",
-                \"schema\": $(cat openapi.yaml | jq -Rs .)
-              }
-            }"
+          echo "✅ PR API updated successfully"
 
       - name: Find existing Postman comment
         uses: peter-evans/find-comment@v3
@@ -203,16 +267,17 @@ jobs:
           edit-mode: replace
           body: |
             <!-- POSTMAN_SYNC_COMMENT -->
-            ## 📮 Postman Collection Updated
+            ## 📮 Postman API Updated
 
-            **Version:** `${{ steps.postman-sync.outputs.version }}`
+            **API Name:** `${{ steps.postman-sync.outputs.api_name }}`
+            **API ID:** `${{ steps.postman-sync.outputs.api_id }}`
 
-            This PR's API has been synced to Postman. You can:
-            - View and test the API in Postman workspace
-            - Import the collection to test endpoints
+            This PR's OpenAPI documentation has been synced to a dedicated Postman API. You can:
+            - View and test the API in your Postman workspace
+            - Import the API to test endpoints
             - See the OpenAPI schema updates
 
-            > **Note:** The version `${{ steps.postman-sync.outputs.version }}` will be automatically deleted when this PR is closed.
+            > **Note:** The API `${{ steps.postman-sync.outputs.api_name }}` will be automatically deleted when this PR is closed.
 
             ---
 
