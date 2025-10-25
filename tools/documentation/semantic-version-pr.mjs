@@ -15,6 +15,7 @@ const PACKAGE_NAME = '@apidockit-com/sdk';
 const REGISTRY = 'https://npm.pkg.github.com';
 const PR_NUMBER = process.env.GITHUB_PR_NUMBER || '0';
 const AUTH_TOKEN = process.env.NODE_AUTH_TOKEN;
+const COMMIT_SHA = process.env.GITHUB_SHA ? process.env.GITHUB_SHA.substring(0, 7) : 'local';
 
 // Create temporary .npmrc with authentication
 const tmpNpmrc = join(tmpdir(), `.npmrc-${Date.now()}`);
@@ -41,18 +42,20 @@ always-auth=true`;
     // Parse version and increment patch
     const versionPart = latestVersion.split('-')[0]; // Remove any pre-release tags
     const [major, minor, patch] = versionPart.split('.').map(Number);
-    const newVersion = `${major}.${minor}.${patch + 1}-pr-${PR_NUMBER}`;
+    const newVersion = `${major}.${minor}.${patch + 1}-pr-${PR_NUMBER}.${COMMIT_SHA}`;
     process.stderr.write(`📦 Latest version: ${latestVersion} → New version: ${newVersion}\n`);
     console.log(newVersion);
   } else {
-    // No published version, start at 0.0.1-pr-{number}
-    process.stderr.write(`📦 No previous version found, starting at 0.0.1-pr-${PR_NUMBER}\n`);
-    console.log(`0.0.1-pr-${PR_NUMBER}`);
+    // No published version, start at 0.0.1-pr-{number}.{sha}
+    const newVersion = `0.0.1-pr-${PR_NUMBER}.${COMMIT_SHA}`;
+    process.stderr.write(`📦 No previous version found, starting at ${newVersion}\n`);
+    console.log(newVersion);
   }
 } catch (error) {
-  // Package not found or first publish, start at 0.0.1-pr-{number}
-  process.stderr.write(`📦 Package not found (first publish), starting at 0.0.1-pr-${PR_NUMBER}\n`);
-  console.log(`0.0.1-pr-${PR_NUMBER}`);
+  // Package not found or first publish, start at 0.0.1-pr-{number}.{sha}
+  const newVersion = `0.0.1-pr-${PR_NUMBER}.${COMMIT_SHA}`;
+  process.stderr.write(`📦 Package not found (first publish), starting at ${newVersion}\n`);
+  console.log(newVersion);
 } finally {
   // Clean up temporary .npmrc
   if (npmrcCreated) {
