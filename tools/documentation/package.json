@@ -2,7 +2,7 @@
     "license": "UNLICENSED",
     "scripts": {
         "lint": "cd ../ && php artisan doc:generate && cd tools && redocly lint ../storage/app/documentation/openapi.yaml",
-        "generate": "cd ../../src && php artisan doc:generate && cd ../tools/documentation && openapi-sdk generate  typescript-fetch -i ../../src/storage/app/private/documentation/openapi.yaml -o ../../openapi/sdk/dist"
+        "generate": "cd ../../src && php artisan doc:generate && cd ../tools/documentation && openapi-sdk generate  typescript-fetch -i ../../src/storage/app/private/documentation/openapi.yaml -o ../../openapi/sdk/src"
     },
     "dependencies": {
         "@redocly/cli": "^2.7.0",
