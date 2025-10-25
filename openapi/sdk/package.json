@@ -1,5 +1,5 @@
 {
-  "name": "@api-doc-kit/sdk",
+  "name": "@apidockit-com/sdk",
   "version": "0.0.0",
   "description": "API Doc Kit – generated TypeScript SDK",
   "type": "module",

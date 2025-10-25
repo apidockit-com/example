@@ -8,7 +8,7 @@ import { execSync } from 'child_process';
  * Appends PR number from GITHUB_PR_NUMBER environment variable
  */
 
-const PACKAGE_NAME = '@api-doc-kit/sdk';
+const PACKAGE_NAME = '@apidockit-com/sdk';
 const REGISTRY = 'https://npm.pkg.github.com';
 const PR_NUMBER = process.env.GITHUB_PR_NUMBER || '0';
 

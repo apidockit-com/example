@@ -7,7 +7,7 @@ import { execSync } from 'child_process';
  * Fetches latest version from npm registry and increments patch
  */
 
-const PACKAGE_NAME = '@api-doc-kit/sdk';
+const PACKAGE_NAME = '@apidockit-com/sdk';
 const REGISTRY = 'https://npm.pkg.github.com';
 
 try {

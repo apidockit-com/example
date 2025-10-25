@@ -38,7 +38,7 @@ jobs:
         with:
           node-version: 20
           registry-url: "https://npm.pkg.github.com"
-          scope: "@api-doc-kit"
+          scope: "@apidockit-com"
 
       - name: Install npm dependencies for documentation
         working-directory: tools/documentation

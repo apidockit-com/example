@@ -17,7 +17,7 @@ This repository automatically generates and publishes a TypeScript SDK to GitHub
 ### 1. Create `.npmrc` in your project root
 
 ```
-@api-doc-kit:registry=https://npm.pkg.github.com
+@apidockit-com:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 always-auth=true
 ```
@@ -36,29 +36,29 @@ export GITHUB_TOKEN=your_github_personal_access_token
 
 **Production (latest stable):**
 ```bash
-npm install @api-doc-kit/sdk
+npm install @apidockit-com/sdk
 ```
 
 **Development version:**
 ```bash
-npm install @api-doc-kit/sdk@dev
+npm install @apidockit-com/sdk@dev
 ```
 
 **Specific PR version:**
 ```bash
-npm install @api-doc-kit/sdk@0.0.5-pr-123
+npm install @apidockit-com/sdk@0.0.5-pr-123
 ```
 
 **Specific version:**
 ```bash
-npm install @api-doc-kit/sdk@0.0.5
+npm install @apidockit-com/sdk@0.0.5
 ```
 
 ## Verification Checklist
 
 ### First-time Setup
 
-- [ ] Verify GitHub organization `@api-doc-kit` exists
+- [ ] Verify GitHub organization `apidockit-com` exists
 - [ ] Ensure repo has `packages: write` permission
 - [ ] Check that `src/database/database.sqlite` is gitignored
 - [ ] Confirm Laravel command `php artisan doc:generate` works locally
@@ -127,21 +127,21 @@ Error: Laravel could not boot / Database connection failed
 
 **Symptoms:**
 ```
-npm ERR! 403 Forbidden - PUT https://npm.pkg.github.com/@api-doc-kit%2fsdk
+npm ERR! 403 Forbidden - PUT https://npm.pkg.github.com/@apidockit-com%2fsdk
 ```
 
 **Solutions:**
 
 1. Verify workflow has `packages: write` permission (check YAML)
-2. Ensure package name in `openapi/sdk/package.json` matches `@api-doc-kit/sdk`
+2. Ensure package name in `openapi/sdk/package.json` matches `@apidockit-com/sdk`
 3. Check that `publishConfig.registry` is set to `https://npm.pkg.github.com`
-4. Confirm repository belongs to `@api-doc-kit` organization
+4. Confirm repository belongs to `apidockit-com` organization
 
 ### Issue: Consumer cannot install SDK
 
 **Symptoms:**
 ```
-npm ERR! 404 Not Found - GET https://npm.pkg.github.com/@api-doc-kit%2fsdk
+npm ERR! 404 Not Found - GET https://npm.pkg.github.com/@apidockit-com%2fsdk
 ```
 
 **Solutions:**
@@ -152,7 +152,7 @@ npm ERR! 404 Not Found - GET https://npm.pkg.github.com/@api-doc-kit%2fsdk
 4. Confirm package was published (check repository Packages tab)
 5. Try logging in manually:
    ```bash
-   npm login --registry=https://npm.pkg.github.com --scope=@api-doc-kit
+   npm login --registry=https://npm.pkg.github.com --scope=@apidockit-com
    ```
 
 ### Issue: SDK builds but TypeScript compilation fails
@@ -216,7 +216,7 @@ You can manually trigger the production workflow:
          ▼
 ┌─────────────────┐
 │ GitHub Packages │
-│ @api-doc-kit/sdk│
+│ @apidockit-com/sdk│
 └─────────────────┘
 ```
 
