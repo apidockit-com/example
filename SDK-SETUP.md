@@ -14,25 +14,33 @@ This repository automatically generates and publishes a TypeScript SDK to GitHub
 
 ## Consuming the SDK
 
-### 1. Create `.npmrc` in your project root
+### 1. Authenticate with GitHub Packages
 
+**Option A: Using .npmrc file (Recommended for local development)**
+
+Create `.npmrc` in your project root:
 ```
 @apidockit-com:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN_HERE
 always-auth=true
 ```
 
-### 2. Set GITHUB_TOKEN environment variable
-
-```bash
-export GITHUB_TOKEN=your_github_personal_access_token
-```
+Replace `YOUR_GITHUB_TOKEN_HERE` with your actual Personal Access Token.
 
 **Token Requirements:**
 - Scope: `read:packages`
 - Generate at: https://github.com/settings/tokens
 
-### 3. Install the SDK
+**Option B: Using npm login**
+
+```bash
+npm login --registry=https://npm.pkg.github.com --scope=@apidockit-com
+# Username: your-github-username
+# Password: your-github-token (NOT your password!)
+# Email: your-email
+```
+
+### 2. Install the SDK
 
 **Production (latest stable):**
 ```bash

@@ -10,3 +10,6 @@ node_modules/
 # Lock files (generated during npm install)
 package-lock.json
 npm-debug.log*
+
+# NPM config (created during CI/CD with secrets)
+.npmrc

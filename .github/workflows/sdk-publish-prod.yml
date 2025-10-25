@@ -84,7 +84,11 @@ jobs:
       - name: Configure npm authentication
         working-directory: openapi/sdk
         run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.PACKAGES_TOKEN }}" >> .npmrc
+          cat > .npmrc << EOF
+          @apidockit-com:registry=https://npm.pkg.github.com
+          //npm.pkg.github.com/:_authToken=${{ secrets.PACKAGES_TOKEN }}
+          always-auth=true
+          EOF
           echo "✅ Authentication configured"
           cat .npmrc
 
