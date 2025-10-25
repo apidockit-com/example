@@ -51,7 +51,7 @@ jobs:
 
       - name: Generate new SDK version number
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
         run: |
           echo "NEW_SDK_VERSION=$(node tools/documentation/semantic-version-prod.mjs)" >> $GITHUB_ENV
 
@@ -74,7 +74,7 @@ jobs:
       - name: Publish SDK to GitHub Packages
         working-directory: openapi/sdk
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
         run: npm publish --tag latest
 
       - name: Summary
@@ -85,5 +85,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Install command:**" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "npm install @api-doc-kit/sdk@${{ env.NEW_SDK_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "npm install @apidockit-com/sdk@${{ env.NEW_SDK_VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
