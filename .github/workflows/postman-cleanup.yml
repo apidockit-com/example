@@ -1,0 +1,26 @@
+name: Clean up Postman PR Versions
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  cleanup-postman:
+    name: Delete Postman PR version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete PR version from Postman
+        run: |
+          PR_VERSION="pr-${{ github.event.pull_request.number }}"
+
+          echo "🗑️  Deleting Postman version: ${PR_VERSION}"
+
+          curl --request DELETE \
+            --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID }}/versions/${PR_VERSION}" \
+            --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+            --fail-with-body || echo "⚠️  Version might not exist or already deleted"
+
+          echo "✅ Cleanup complete"
