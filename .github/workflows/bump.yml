@@ -1,0 +1,164 @@
+name: Deploy API Documentation to Bump.sh
+
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  # Generate OpenAPI documentation from Laravel
+  generate-docs:
+    name: Generate OpenAPI documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: cd src && composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Create sqlite database
+        run: cd src && touch database/database.sqlite
+
+      - name: Generate OpenAPI documentation
+        run: cd src && php artisan doc:generate
+
+      - name: Upload OpenAPI file as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: src/storage/app/private/documentation/openapi.yaml
+          retention-days: 1
+
+  # Deploy to Bump.sh (Production - main branch)
+  deploy-production:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    name: Deploy to Bump.sh (Production)
+    runs-on: ubuntu-latest
+    needs: generate-docs
+    steps:
+      - name: Download OpenAPI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-spec
+
+      - name: Deploy API documentation
+        uses: bump-sh/github-action@v1
+        with:
+          doc: ${{ secrets.BUMP_DOC_ID }}
+          token: ${{ secrets.BUMP_TOKEN }}
+          file: openapi.yaml
+
+  # Deploy to Bump.sh (Development - dev branch)
+  deploy-dev:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+    name: Deploy to Bump.sh (Dev)
+    runs-on: ubuntu-latest
+    needs: generate-docs
+    steps:
+      - name: Download OpenAPI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-spec
+
+      - name: Deploy API documentation to dev branch
+        uses: bump-sh/github-action@v1
+        with:
+          doc: ${{ secrets.BUMP_DOC_ID }}
+          token: ${{ secrets.BUMP_TOKEN }}
+          file: openapi.yaml
+          branch: dev
+
+      - name: Show diff between dev and production
+        uses: bump-sh/github-action@v1
+        with:
+          doc: ${{ secrets.BUMP_DOC_ID }}
+          token: ${{ secrets.BUMP_TOKEN }}
+          file: openapi.yaml
+          command: diff
+          branch: dev
+        continue-on-error: true
+
+  # API Diff for Pull Requests
+  api-diff:
+    if: ${{ github.event_name == 'pull_request' }}
+    name: Show API diff on PR
+    runs-on: ubuntu-latest
+    needs: generate-docs
+    steps:
+      - name: Download OpenAPI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-spec
+
+      - name: Comment PR with API diff
+        uses: bump-sh/github-action@v1
+        with:
+          doc: ${{ secrets.BUMP_DOC_ID }}
+          token: ${{ secrets.BUMP_TOKEN }}
+          file: openapi.yaml
+          command: diff
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Find existing documentation comment
+        uses: peter-evans/find-comment@v3
+        id: find-doc-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '<!-- API_DOCS_COMMENT -->'
+
+      - name: Determine base branch documentation URL
+        id: doc-url
+        run: |
+          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+          DOC_SLUG="${{ secrets.BUMP_DOC_SLUG }}"
+
+          if [ "$BASE_BRANCH" = "main" ]; then
+            DOC_URL="https://bump.sh/doc/${DOC_SLUG}"
+            BRANCH_NAME="Production"
+          else
+            DOC_URL="https://bump.sh/doc/${DOC_SLUG}/branch/${BASE_BRANCH}"
+            BRANCH_NAME="${BASE_BRANCH}"
+          fi
+
+          echo "url=${DOC_URL}" >> $GITHUB_OUTPUT
+          echo "branch=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Post documentation links comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find-doc-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          body: |
+            <!-- API_DOCS_COMMENT -->
+            ## 📚 API Documentation
+
+            **Base Branch:** `${{ github.event.pull_request.base.ref }}` (${{ steps.doc-url.outputs.branch }})
+
+            **View Documentation:**
+            🔗 [${{ steps.doc-url.outputs.url }}](${{ steps.doc-url.outputs.url }})
+
+            **API Changes:**
+            The Bump.sh diff comment above shows all API changes in this PR compared to the base branch.
+
+            ---
+
+            *🤖 This comment will be automatically updated when you push new commits*
