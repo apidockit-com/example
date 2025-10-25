@@ -62,6 +62,7 @@ jobs:
           SCHEMAS=$(curl --request GET \
             --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID_MAIN }}" \
             --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+            --header "Accept: application/vnd.api.v10+json" \
             --silent)
 
           SCHEMA_ID=$(echo "$SCHEMAS" | jq -r '.api.schemas[0].id // empty')
@@ -69,31 +70,53 @@ jobs:
           if [ -z "$SCHEMA_ID" ]; then
             echo "No schema found, creating new schema..."
             # Create new schema
-            curl --request POST \
+            RESPONSE=$(curl --request POST \
               --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID_MAIN }}/schemas" \
               --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+              --header "Accept: application/vnd.api.v10+json" \
               --header "Content-Type: application/json" \
+              --silent \
+              --write-out "\nHTTP_STATUS:%{http_code}" \
               --data "{
                 \"schema\": {
                   \"type\": \"openapi3\",
                   \"language\": \"yaml\",
                   \"schema\": $(cat openapi.yaml | jq -Rs .)
                 }
-              }"
+              }")
+
+            HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
+            if [ "$HTTP_STATUS" != "200" ] && [ "$HTTP_STATUS" != "201" ]; then
+              echo "❌ Failed to create schema"
+              echo "$RESPONSE" | sed '/HTTP_STATUS/d'
+              exit 1
+            fi
+            echo "✅ Schema created successfully"
           else
             echo "Updating existing schema: $SCHEMA_ID"
             # Update existing schema
-            curl --request PUT \
+            RESPONSE=$(curl --request PUT \
               --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID_MAIN }}/schemas/$SCHEMA_ID" \
               --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+              --header "Accept: application/vnd.api.v10+json" \
               --header "Content-Type: application/json" \
+              --silent \
+              --write-out "\nHTTP_STATUS:%{http_code}" \
               --data "{
                 \"schema\": {
                   \"type\": \"openapi3\",
                   \"language\": \"yaml\",
                   \"schema\": $(cat openapi.yaml | jq -Rs .)
                 }
-              }"
+              }")
+
+            HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
+            if [ "$HTTP_STATUS" != "200" ]; then
+              echo "❌ Failed to update schema"
+              echo "$RESPONSE" | sed '/HTTP_STATUS/d'
+              exit 1
+            fi
+            echo "✅ Schema updated successfully"
           fi
 
           echo "✅ Production API updated successfully"
@@ -117,6 +140,7 @@ jobs:
           SCHEMAS=$(curl --request GET \
             --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID_DEV }}" \
             --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+            --header "Accept: application/vnd.api.v10+json" \
             --silent)
 
           SCHEMA_ID=$(echo "$SCHEMAS" | jq -r '.api.schemas[0].id // empty')
@@ -124,31 +148,53 @@ jobs:
           if [ -z "$SCHEMA_ID" ]; then
             echo "No schema found, creating new schema..."
             # Create new schema
-            curl --request POST \
+            RESPONSE=$(curl --request POST \
               --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID_DEV }}/schemas" \
               --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+              --header "Accept: application/vnd.api.v10+json" \
               --header "Content-Type: application/json" \
+              --silent \
+              --write-out "\nHTTP_STATUS:%{http_code}" \
               --data "{
                 \"schema\": {
                   \"type\": \"openapi3\",
                   \"language\": \"yaml\",
                   \"schema\": $(cat openapi.yaml | jq -Rs .)
                 }
-              }"
+              }")
+
+            HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
+            if [ "$HTTP_STATUS" != "200" ] && [ "$HTTP_STATUS" != "201" ]; then
+              echo "❌ Failed to create schema"
+              echo "$RESPONSE" | sed '/HTTP_STATUS/d'
+              exit 1
+            fi
+            echo "✅ Schema created successfully"
           else
             echo "Updating existing schema: $SCHEMA_ID"
             # Update existing schema
-            curl --request PUT \
+            RESPONSE=$(curl --request PUT \
               --url "https://api.getpostman.com/apis/${{ secrets.POSTMAN_API_ID_DEV }}/schemas/$SCHEMA_ID" \
               --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+              --header "Accept: application/vnd.api.v10+json" \
               --header "Content-Type: application/json" \
+              --silent \
+              --write-out "\nHTTP_STATUS:%{http_code}" \
               --data "{
                 \"schema\": {
                   \"type\": \"openapi3\",
                   \"language\": \"yaml\",
                   \"schema\": $(cat openapi.yaml | jq -Rs .)
                 }
-              }"
+              }")
+
+            HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
+            if [ "$HTTP_STATUS" != "200" ]; then
+              echo "❌ Failed to update schema"
+              echo "$RESPONSE" | sed '/HTTP_STATUS/d'
+              exit 1
+            fi
+            echo "✅ Schema updated successfully"
           fi
 
           echo "✅ Development API updated successfully"
@@ -217,36 +263,59 @@ jobs:
           SCHEMAS=$(curl --request GET \
             --url "https://api.getpostman.com/apis/${PR_API_ID}" \
             --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+            --header "Accept: application/vnd.api.v10+json" \
             --silent)
 
           SCHEMA_ID=$(echo "$SCHEMAS" | jq -r '.api.schemas[0].id // empty')
 
           if [ -z "$SCHEMA_ID" ]; then
             echo "Creating new schema..."
-            curl --request POST \
+            RESPONSE=$(curl --request POST \
               --url "https://api.getpostman.com/apis/${PR_API_ID}/schemas" \
               --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+              --header "Accept: application/vnd.api.v10+json" \
               --header "Content-Type: application/json" \
+              --silent \
+              --write-out "\nHTTP_STATUS:%{http_code}" \
               --data "{
                 \"schema\": {
                   \"type\": \"openapi3\",
                   \"language\": \"yaml\",
                   \"schema\": $(cat openapi.yaml | jq -Rs .)
                 }
-              }"
+              }")
+
+            HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
+            if [ "$HTTP_STATUS" != "200" ] && [ "$HTTP_STATUS" != "201" ]; then
+              echo "❌ Failed to create schema"
+              echo "$RESPONSE" | sed '/HTTP_STATUS/d'
+              exit 1
+            fi
+            echo "✅ Schema created successfully"
           else
             echo "Updating existing schema: $SCHEMA_ID"
-            curl --request PUT \
+            RESPONSE=$(curl --request PUT \
               --url "https://api.getpostman.com/apis/${PR_API_ID}/schemas/$SCHEMA_ID" \
               --header "X-API-Key: ${{ secrets.POSTMAN_API_KEY }}" \
+              --header "Accept: application/vnd.api.v10+json" \
               --header "Content-Type: application/json" \
+              --silent \
+              --write-out "\nHTTP_STATUS:%{http_code}" \
               --data "{
                 \"schema\": {
                   \"type\": \"openapi3\",
                   \"language\": \"yaml\",
                   \"schema\": $(cat openapi.yaml | jq -Rs .)
                 }
-              }"
+              }")
+
+            HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
+            if [ "$HTTP_STATUS" != "200" ]; then
+              echo "❌ Failed to update schema"
+              echo "$RESPONSE" | sed '/HTTP_STATUS/d'
+              exit 1
+            fi
+            echo "✅ Schema updated successfully"
           fi
 
           echo "✅ PR API updated successfully"
