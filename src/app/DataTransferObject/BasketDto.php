@@ -6,9 +6,9 @@ use Illuminate\Contracts\Support\Arrayable;
 use IsmayilDev\ApiDocKit\Attributes\Properties\NumberProperty;
 use IsmayilDev\ApiDocKit\Attributes\Schema\DataSchema;
 
-#[DataSchema(properties: [
-    new NumberProperty(description: 'Total value of basket item', property: 'total', example: 43.45),
-])]
+//#[DataSchema(properties: [
+//    new NumberProperty(description: 'Total value of basket item', property: 'total', example: 43.45),
+//])]
 readonly class BasketDto implements Arrayable
 {
     public function __construct(

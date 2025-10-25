@@ -16,6 +16,6 @@ Route::prefix('orders')->group(function () {
     Route::delete('/{id}', OrderDeleteController::class)->name('delete');
 });
 
-Route::prefix('basket')->group(function () {
+/*Route::prefix('basket')->group(function () {
     Route::get('/', BasketRetrieveController::class)->name('list');
-});
+});*/
