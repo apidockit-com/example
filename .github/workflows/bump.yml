@@ -1,0 +1,129 @@
+name: Deploy API Documentation to Bump.sh
+
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  # Generate OpenAPI documentation from Laravel
+  generate-docs:
+    name: Generate OpenAPI documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: cd src && composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Create sqlite database
+        run: cd src && touch database/database.sqlite
+
+      - name: Generate OpenAPI documentation
+        run: cd src && php artisan doc:generate
+
+      - name: Upload OpenAPI file as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: src/storage/app/private/documentation/openapi.yaml
+          retention-days: 1
+
+  # Deploy to Bump.sh (Production - main branch)
+  deploy-production:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    name: Deploy to Bump.sh (Production)
+    runs-on: ubuntu-latest
+    needs: generate-docs
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download OpenAPI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-spec
+          path: .
+
+      - name: Deploy API documentation
+        uses: bump-sh/github-action@v1
+        with:
+          doc: ${{ secrets.BUMP_DOC_ID }}
+          token: ${{ secrets.BUMP_TOKEN }}
+          file: openapi.yaml
+
+  # Deploy to Bump.sh (Development - dev branch)
+  deploy-dev:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+    name: Deploy to Bump.sh (Dev)
+    runs-on: ubuntu-latest
+    needs: generate-docs
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download OpenAPI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-spec
+          path: .
+
+      - name: Deploy API documentation to dev branch
+        uses: bump-sh/github-action@v1
+        with:
+          doc: ${{ secrets.BUMP_DOC_ID }}
+          token: ${{ secrets.BUMP_TOKEN }}
+          file: openapi.yaml
+          branch: dev
+
+      - name: Show diff between dev and production
+        uses: bump-sh/github-action@v1
+        with:
+          doc: ${{ secrets.BUMP_DOC_ID }}
+          token: ${{ secrets.BUMP_TOKEN }}
+          file: openapi.yaml
+          command: diff
+          branch: dev
+        continue-on-error: true
+
+  # API Diff for Pull Requests
+  api-diff:
+    if: ${{ github.event_name == 'pull_request' }}
+    name: Show API diff on PR
+    runs-on: ubuntu-latest
+    needs: generate-docs
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download OpenAPI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-spec
+          path: .
+
+      - name: Comment PR with API diff
+        uses: bump-sh/github-action@v1
+        with:
+          doc: ${{ secrets.BUMP_DOC_ID }}
+          token: ${{ secrets.BUMP_TOKEN }}
+          file: openapi.yaml
+          command: diff
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
