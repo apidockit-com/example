@@ -13,7 +13,7 @@ class UserDto implements Arrayable
     public function __construct(
         public int $id,
         public string $name,
-        public Email $email,
+//        public Email $email,
     ) {
     }
 
@@ -22,7 +22,7 @@ class UserDto implements Arrayable
         return new self(
             id: $model->id,
             name: $model->name,
-            email: new Email($model->email),
+//            email: new Email($model->email),
         );
     }
 
@@ -31,7 +31,7 @@ class UserDto implements Arrayable
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'email' => $this->email->getValue(),
+//            'email' => $this->email->getValue(),
         ];
     }
 }
