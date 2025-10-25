@@ -1059,12 +1059,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ismayil-dev/api-doc-kit.git",
-                "reference": "2235aa7bef695026506459d23e0b33014c0d7208"
+                "reference": "a59bb7774d8e5812bc964b4e7bff057f8d9c4b6f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ismayil-dev/api-doc-kit/zipball/2235aa7bef695026506459d23e0b33014c0d7208",
-                "reference": "2235aa7bef695026506459d23e0b33014c0d7208",
+                "url": "https://api.github.com/repos/ismayil-dev/api-doc-kit/zipball/a59bb7774d8e5812bc964b4e7bff057f8d9c4b6f",
+                "reference": "a59bb7774d8e5812bc964b4e7bff057f8d9c4b6f",
                 "shasum": ""
             },
             "require": {
@@ -1118,7 +1118,7 @@
                 "issues": "https://github.com/ismayil-dev/api-doc-kit/issues",
                 "source": "https://github.com/ismayil-dev/api-doc-kit"
             },
-            "time": "2025-10-25T17:54:24+00:00"
+            "time": "2025-10-25T18:05:46+00:00"
         },
         {
             "name": "laravel/framework",

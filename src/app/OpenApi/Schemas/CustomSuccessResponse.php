@@ -17,7 +17,7 @@ class CustomSuccessResponse extends MediaType
             schema: new Schema(
                 required: ['data', 'messages'],
                 properties: [
-                    new Property(property: 'data', ref: $ref),
+                    new Property(property: 'data', type: OpenApiPropertyType::ARRAY->value, items: new Items(ref: $ref)),
                     new Property(property: 'messages', type: OpenApiPropertyType::ARRAY->value, items: new Items(type: 'string')),
                 ],
                 type: OpenApiPropertyType::OBJECT->value,
