@@ -22,8 +22,7 @@ readonly class OrderDto implements Arrayable
         public OrderStatus $status,
         public OrderPaymentStatus $paymentStatus,
         public int $total,
-        #[ArrayOf('string')]
-        public array $tags,
+
         public Carbon $placedAt,
         public ?Carbon $paidAt,
         #[ArrayOf(OrderItemDto::class)]
@@ -40,7 +39,6 @@ readonly class OrderDto implements Arrayable
             status: $order->status,
             paymentStatus: $order->payment_status,
             total: $order->total,
-            tags: $order->tags,
             placedAt: $order->placed_at,
             paidAt: $order->paid_at,
             items: $order->items,
@@ -56,7 +54,6 @@ readonly class OrderDto implements Arrayable
             'status' => $this->status,
             'paymentStatus' => $this->paymentStatus->value,
             'total' => $this->total,
-            'tags' => $this->tags,
             'placedAt' => $this->placedAt->toDateTimeString(),
             'paidAt' => $this->paidAt?->format('Y-m-d'),
             'items' => $this->items->map(fn (OrderItem $item) => OrderItemDto::fromModel($item)),
